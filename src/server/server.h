@@ -4,7 +4,6 @@
 #include <boost/asio.hpp>
 #include <cstdint>
 #include "../logger/logger.h"
-#include "../utils.h"
 
 using boost::asio::ip::udp;
 
@@ -36,11 +35,6 @@ public:
         
         // Закрываем сокет
         socket_.close(ec);
-
-        // Логируем остановку сервера
-        std::stringstream ss;
-        get_cooked_log_string(ss) << "DNS Server stopped." << std::endl;
-        logger_.log(ss.str());
     }
 
 private:

@@ -70,6 +70,14 @@ void Logger::findNextFileNumber() {
                 }
             }
         }
+        fs::path max_file_path = parent_dir / (basename + "_" + std::to_string(max_number) + extension);
+        if (fs::exists(max_file_path)) {
+            current_file_size_ = fs::file_size(max_file_path);
+            if (current_file_size_ < max_file_size_) {
+                current_file_number_ = max_number;
+                return; // Используем существующий файл с максимальным номером
+            }
+        }
     }
     catch (const fs::filesystem_error& e) {
         throw std::runtime_error("Failed to access log directory: " + std::string(e.what()));

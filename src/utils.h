@@ -3,6 +3,37 @@
 
 #include <chrono>
 #include <iomanip>
+#include <yaml-cpp/yaml.h>
+
+class ConfigurateException : public std::exception {
+public:
+    explicit ConfigurateException(const std::string& message) : message_(message) {}
+    explicit ConfigurateException(const char* message) : message_(message) {}
+
+    virtual const char* what() const noexcept override {
+        return message_.c_str();
+    }
+
+private:
+    std::string message_;
+};
+
+struct ServerConfiguration {
+    std::string base_filename;
+    size_t max_log_size;
+    uint16_t port;
+    std::string base_dns_ip;
+
+    ServerConfiguration() : base_filename(""), max_log_size(0), port(0), base_dns_ip("") {}
+    ServerConfiguration(const std::string& base_filename, size_t max_log_size,
+                         uint16_t port, const std::string& base_dns_ip) :
+                         base_filename(base_filename),
+                         max_log_size(max_log_size),
+                         port(port),
+                         base_dns_ip(base_dns_ip) {}
+};
+
+void parseServerConfiguration(ServerConfiguration& p_conf, const std::string& conf_filename);
 
 inline std::stringstream& get_cooked_log_string(std::stringstream& ss) {
     auto now = std::chrono::system_clock::now();
