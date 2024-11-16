@@ -1,0 +1,7 @@
+filebeat.inputs:
+  - type: log
+    enabled: true
+    paths:
+      - /path/to/dns-logs/*.log
+output.logstash:
+  hosts: ["elk:5044"]  # Соединение с Logstash в контейнере ELK
