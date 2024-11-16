@@ -1,18 +1,14 @@
 #include "server.h"
+#include <cstdint>
 #include <iostream>
 #include "../utils.h"
 
 void DNSServer::handleRequest(std::size_t bytes_recvd) {
-    std::vector<char> forward_buffer(data_.begin(), 
-                                       data_.begin() + bytes_recvd);
-
-    forward_socket_.async_send_to(
-        boost::asio::buffer(forward_buffer), forward_endpoint_,
-        [](boost::system::error_code ec, std::size_t) {
-            if (ec) {
-                std::cerr << "Forward error: " << ec.message() << std::endl;
-            }
-        });
+    auto context = std::make_shared<QueryContext>(
+            data_.data(),
+            bytes_recvd,
+            sender_endpoint_
+        );
 
     try {
         std::string domain_name = DNSNameExtractor::extractDomainName(data_, bytes_recvd);
@@ -23,8 +19,56 @@ void DNSServer::handleRequest(std::size_t bytes_recvd) {
         std::stringstream ss;
         get_cooked_log_string(ss) << "Error: " << e.what() << std::endl;
 
-        std::cerr << ss.str(); // TODO: Create logging system
-    } // Логгирования не происходит, но пакет отправляется
+        std::cerr << ss.str(); // На будущее - написать систему логгирования
+    }
+
+    forward_socket_.async_send_to(
+        boost::asio::buffer(context->buffer),
+        forward_endpoint_,
+        [this, context](boost::system::error_code ec, std::size_t) {
+            if (!ec) {
+                start_receive_response(context);
+            }
+        });
+}
+
+
+
+void DNSServer::start_receive_response(std::shared_ptr<QueryContext> context) {
+    auto response_buffer = std::make_shared<std::array<uint8_t, MAX_DNS_PACKET_SIZE>>();
+        
+    forward_socket_.async_receive_from(
+        boost::asio::buffer(*response_buffer),
+        forward_endpoint_,
+        [this, context, response_buffer]
+        (boost::system::error_code ec, std::size_t bytes_transferred) {
+            if (!ec) {
+                handle_response(context, response_buffer, bytes_transferred);
+            }
+        });
+}
+
+void DNSServer::handle_response(std::shared_ptr<QueryContext> context,
+                        std::shared_ptr<std::array<uint8_t, MAX_DNS_PACKET_SIZE>> response_buffer,
+                        std::size_t bytes_transferred) {
+    // Проверяем ID ответа
+    if (bytes_transferred >= 2) {
+        uint16_t response_id = (static_cast<uint16_t>((*response_buffer)[0]) << 8) |
+                              static_cast<uint16_t>((*response_buffer)[1]);
+        
+        if (response_id == context->query_id) {
+            // Отправляем ответ клиенту через основной сокет
+            socket_.async_send_to(
+                boost::asio::buffer(*response_buffer, bytes_transferred),
+                context->client_endpoint,
+                [](boost::system::error_code ec, std::size_t) {
+                    if (ec) {
+                        std::cerr << "Error sending response to client: " 
+                                << ec.message() << std::endl;
+                    }
+                });
+        }
+    }
 }
 
 std::string DNSServer::DNSNameExtractor::extractDomainName(const std::array<uint8_t, MAX_DNS_PACKET_SIZE> buffer, size_t buffer_size, size_t offset) {

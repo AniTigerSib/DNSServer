@@ -38,6 +38,22 @@ public:
     }
 
 private:
+    struct QueryContext {
+        std::vector<uint8_t> buffer;
+        udp::endpoint client_endpoint;
+        uint16_t query_id;
+        
+        QueryContext(const uint8_t* data, size_t size, const udp::endpoint& endpoint)
+            : buffer(data, data + size), client_endpoint(endpoint)
+        {
+            // Извлекаем ID запроса из DNS-заголовка (первые 2 байта)
+            if (size >= 2) {
+                query_id = (static_cast<uint16_t>(data[0]) << 8) | 
+                          static_cast<uint16_t>(data[1]);
+            }
+        }
+    };
+
     udp::socket socket_;
     udp::socket forward_socket_;
     udp::resolver resolver_;
@@ -61,6 +77,11 @@ private:
     }
 
     void handleRequest(std::size_t bytes_recvd);
+
+    void start_receive_response(std::shared_ptr<QueryContext> context);
+    void handle_response(std::shared_ptr<QueryContext> context,
+                        std::shared_ptr<std::array<uint8_t, MAX_DNS_PACKET_SIZE>> response_buffer,
+                        std::size_t bytes_transferred);
 
     class DNSNameExtractor {
     private:
