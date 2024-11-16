@@ -4,8 +4,8 @@
 #include <iomanip>
 #include <iostream>
 
-void DNSServer::handle_request(std::size_t bytes_recvd) {
-    std::string domain_name = DNSNameExtractor::extract_domain_name(data_, bytes_recvd);
+void DNSServer::handleRequest(std::size_t bytes_recvd) {
+    std::string domain_name = DNSNameExtractor::extractDomainName(data_, bytes_recvd);
     std::string log_message = sender_endpoint_.address().to_string() + " " + domain_name;
     try {
         logger_ << log_message; 
@@ -36,7 +36,7 @@ void DNSServer::handle_request(std::size_t bytes_recvd) {
         });
 }
 
-std::string DNSServer::DNSNameExtractor::extract_domain_name(const uint8_t* buffer, size_t buffer_size, size_t offset) {
+std::string DNSServer::DNSNameExtractor::extractDomainName(const uint8_t* buffer, size_t buffer_size, size_t offset) {
     if (buffer_size < offset) {
         throw std::runtime_error("Buffer too small");
     }

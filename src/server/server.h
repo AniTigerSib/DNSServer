@@ -28,13 +28,13 @@ private:
             boost::asio::buffer(data_, MAX_DNS_PACKET_SIZE), sender_endpoint_,
             [this](boost::system::error_code ec, std::size_t bytes_recvd) {
                 if (!ec && bytes_recvd > 0) {
-                    handle_request(bytes_recvd);
+                    handleRequest(bytes_recvd);
                 }
                 receive();
             });
     }
 
-    void handle_request(std::size_t bytes_recvd);
+    void handleRequest(std::size_t bytes_recvd);
 
     class DNSNameExtractor {
     private:
@@ -45,6 +45,6 @@ private:
         static constexpr size_t MAX_LABEL_LENGTH = 63;
 
     public:
-        static std::string extract_domain_name(const uint8_t* buffer, size_t buffer_size, size_t offset = 12);
+        static std::string extractDomainName(const uint8_t* buffer, size_t buffer_size, size_t offset = 12);
     };
 };
