@@ -1,9 +1,7 @@
-#include <exception>
+#ifndef LOGGER_H
+#define LOGGER_H
+
 #include <queue>
-#include <mutex>
-#include <condition_variable>
-#include <thread>
-#include <string>
 #include <future>
 #include <fstream>
 
@@ -26,7 +24,7 @@ public:
         running_(false),
         error_occurred_(false),
         base_filename_(base_filename),
-        max_file_size_(max_file_size),
+        max_file_size_(max_file_size * 1024),
         current_file_size_(0) {
             findNextFileNumber();
         }
@@ -111,3 +109,5 @@ private:
     // Основной цикл обработки очереди сообщений
     void processQueue();
 };
+
+#endif // LOGGER_H

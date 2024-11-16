@@ -1,11 +1,6 @@
 #include "logger.h"
 
-#include <chrono>
-#include <iomanip>
 #include <filesystem>
-#include <fstream>
-
-#include <iostream>
 
 void Logger::findNextFileNumber() {
     namespace fs = std::filesystem;

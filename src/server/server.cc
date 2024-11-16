@@ -1,42 +1,33 @@
 #include "server.h"
-
-#include <chrono>
-#include <iomanip>
 #include <iostream>
+#include "../utils.h"
 
 void DNSServer::handleRequest(std::size_t bytes_recvd) {
-    std::string domain_name = DNSNameExtractor::extractDomainName(data_, bytes_recvd);
-    std::string log_message = sender_endpoint_.address().to_string() + " " + domain_name;
-    try {
-        logger_ << log_message; 
-    } catch (const LoggerException& e) {
-        auto now = std::chrono::system_clock::now();
-        auto time = std::chrono::system_clock::to_time_t(now);
-        auto ms = std::chrono::duration_cast<std::chrono::milliseconds>(
-            now.time_since_epoch()) % 1000;
+    std::vector<char> forward_buffer(data_.begin(), 
+                                       data_.begin() + bytes_recvd);
 
-        std::stringstream ss;
-        ss << std::put_time(std::localtime(&time), "%Y-%m-%d %H:%M:%S")
-           << '.' << std::setfill('0') << std::setw(3) << ms.count()
-           << ": " << "Error: " << e.what() << std::endl;
-        std::cerr << ss.str(); // TODO: Create logging system
-    } // Логгирования не происходит, но пакет отправляется
-
-    // Отправляем оригинальный запрос на upstream DNS сервер
-    auto query = std::make_shared<std::vector<uint8_t>>(data_, data_ + bytes_recvd);
-    udp::resolver::query resolver_query(upstream_dns_, "53");
-    resolver_.async_resolve(
-        resolver_query,
-        [this, query](const boost::system::error_code& ec, udp::resolver::iterator it) {
-            if (!ec) {
-                socket_.async_send_to(
-                    boost::asio::buffer(*query), it->endpoint(),
-                    [](boost::system::error_code, std::size_t) {});
+    forward_socket_.async_send_to(
+        boost::asio::buffer(forward_buffer), forward_endpoint_,
+        [](boost::system::error_code ec, std::size_t) {
+            if (ec) {
+                std::cerr << "Forward error: " << ec.message() << std::endl;
             }
         });
+
+    try {
+        std::string domain_name = DNSNameExtractor::extractDomainName(data_, bytes_recvd);
+        std::string log_message = sender_endpoint_.address().to_string() + " " + domain_name;
+
+        logger_ << log_message; 
+    } catch (const LoggerException& e) {
+        std::stringstream ss;
+        get_cooked_log_string(ss) << "Error: " << e.what() << std::endl;
+
+        std::cerr << ss.str(); // TODO: Create logging system
+    } // Логгирования не происходит, но пакет отправляется
 }
 
-std::string DNSServer::DNSNameExtractor::extractDomainName(const uint8_t* buffer, size_t buffer_size, size_t offset) {
+std::string DNSServer::DNSNameExtractor::extractDomainName(const std::array<uint8_t, MAX_DNS_PACKET_SIZE> buffer, size_t buffer_size, size_t offset) {
     if (buffer_size < offset) {
         throw std::runtime_error("Buffer too small");
     }
