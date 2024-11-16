@@ -19,7 +19,7 @@ C++ realization of DNS emulator. Developed for SurSU Digital Challenge competiti
     cmake ..
     make
 
-## Configurate
+## Configure
 
 Configuration file has to be in yaml format and has to contains folowing fields:
 
