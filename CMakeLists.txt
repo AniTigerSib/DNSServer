@@ -16,10 +16,14 @@ if (NOT Boost_FOUND)
     message(FATAL_ERROR "Boost not found!")
 endif()
 
-set(SOURCESDIR src/)
+set(SOURCES_DIR src/)
+set(LOGGER_DIR ${SOURCES_DIR}/logger/)
+set(SERVER_DIR ${SOURCES_DIR}/server/)
 
 # Указываем исходные файлы
-set(SOURCES ${SOURCESDIR}/server_example.cc)
+set(SOURCES ${LOGGER_DIR}/logger.cc
+    ${SERVER_DIR}/server.cc
+    ${SOURCES_DIR}/main.cc)
 
 # Добавляем исполняемый файл
 add_executable(${PROJECT_NAME} ${SOURCES})

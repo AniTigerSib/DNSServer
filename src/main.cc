@@ -9,8 +9,11 @@ int main() {
     DNSServer *server = nullptr;
     boost::asio::io_context io_context;
 
+    std::string base_filename = "application.log"; // TODO: To configurate
+    size_t max_log_size = 512; // TODO: To configurate
+
     try {
-        logger = new Logger("application.log", 512);
+        logger = new Logger("application.log", max_log_size);
         auto future = logger->start();
 
         // Ждём успешной инициализации или ошибки
@@ -22,9 +25,10 @@ int main() {
 
         boost::asio::signal_set signals(io_context, SIGINT, SIGTERM);
 
-        std::string upstream_dns = "8.8.8.8";
+        uint16_t port = 8083; // TODO: To configurate
+        std::string upstream_dns = "8.8.8.8"; // TODO: To configurate
 
-        server = new DNSServer(8083, io_context, upstream_dns, *logger);
+        server = new DNSServer(port, io_context, upstream_dns, *logger);
 
         signals.async_wait(
             [&](const boost::system::error_code& ec, int signal_number) {

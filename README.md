@@ -14,4 +14,6 @@ C++ realization of DNS emulator. Developed for SurSU Digital Challenge competiti
     - Port number to start server
     - Base logfile path and name
     - Maximum size of log file
-// TODO: Ask if log levels are needed
+// TODO: To fix two bugs:
+    1. Logger creates new log file every time, program starts
+    2. Server needs to be sender and reciever, because client waits for it's answer, but gets nothing
