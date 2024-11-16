@@ -5,6 +5,7 @@
 #include <thread>
 #include <string>
 #include <future>
+#include <fstream>
 
 class LoggerException : public std::exception {
 public:
@@ -21,10 +22,14 @@ private:
 
 class Logger {
 public:
-    explicit Logger(const std::string& filename) : 
-        filename_(filename), 
+    explicit Logger(const std::string& base_filename, size_t max_file_size) : 
         running_(false),
-        error_occurred_(false) {}
+        error_occurred_(false),
+        base_filename_(base_filename),
+        max_file_size_(max_file_size),
+        current_file_size_(0) {
+            findNextFileNumber();
+        }
 
     ~Logger() {
         stop();
@@ -35,8 +40,8 @@ public:
         running_ = true;
         error_promise_ = std::promise<void>();
         auto future = error_promise_.get_future();
-
-        worker_thread_ = std::thread(&Logger::process_queue, this);
+        
+        worker_thread_ = std::thread(&Logger::processQueue, this);
         return future;
     }
 
@@ -60,7 +65,7 @@ public:
             if (error_occurred_) {
                 throw LoggerException("Logger is in error state");
             }
-            message_queue_.push(format_message(message));
+            message_queue_.push(formatMessage(message));
         }
         condition_.notify_one();
     }
@@ -72,7 +77,6 @@ public:
     }
 
 private:
-    std::string filename_;
     std::queue<std::string> message_queue_;
     std::mutex mutex_;
     std::condition_variable condition_;
@@ -81,9 +85,29 @@ private:
     bool error_occurred_;
     std::promise<void> error_promise_;
 
+    std::string base_filename_;
+    size_t max_file_size_;
+    size_t current_file_number_{0};
+    size_t current_file_size_;
+    std::ofstream current_log_file_;
+
+    void findNextFileNumber();
+
+    std::string getCurrentFileName();
+
+    bool openNewLogFile();
+
+    bool rotateLogFileIfNeeded(size_t message_size) {
+        if (current_file_size_ + message_size > max_file_size_) {
+            current_file_number_++;
+            return openNewLogFile();
+        }
+        return true;
+    }
+
     // Форматирование сообщения с добавлением временной метки
-    std::string format_message(const std::string& message);
+    std::string formatMessage(const std::string& message);
 
     // Основной цикл обработки очереди сообщений
-    void process_queue();
+    void processQueue();
 };
