@@ -8,10 +8,10 @@ C++ realization of DNS emulator. Developed for SurSU Digital Challenge competiti
 
 ## Dependencies
 
-- Boost library (for asio)
+- Boost library (asio for sockets)
 - yaml-cpp for configuration purposes
 
-## Notes
+## Todo
 
-// TODO: Remove server_example when done
-// TODO: Clang-format
+- TODO: Remove server_example when done
+- TODO: Clang-format

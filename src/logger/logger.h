@@ -1,12 +1,12 @@
 #ifndef LOGGER_H
 #define LOGGER_H
 
-#include <queue>
-#include <future>
 #include <fstream>
+#include <future>
+#include <queue>
 
 class LoggerException : public std::exception {
-public:
+   public:
     explicit LoggerException(const std::string& message) : message_(message) {}
     explicit LoggerException(const char* message) : message_(message) {}
 
@@ -14,31 +14,29 @@ public:
         return message_.c_str();
     }
 
-private:
+   private:
     std::string message_;
 };
 
 class Logger {
-public:
-    explicit Logger(const std::string& base_filename, size_t max_file_size) : 
-        running_(false),
-        error_occurred_(false),
-        base_filename_(base_filename),
-        max_file_size_(max_file_size * 1024),
-        current_file_size_(0) {
-            findNextFileNumber();
-        }
-
-    ~Logger() {
-        stop();
+   public:
+    explicit Logger(const std::string& base_filename, size_t max_file_size)
+        : running_(false),
+          error_occurred_(false),
+          base_filename_(base_filename),
+          max_file_size_(max_file_size * 1024),
+          current_file_size_(0) {
+        findNextFileNumber();
     }
+
+    ~Logger() { stop(); }
 
     // Начало работы логгера с возвратом future для отслеживания ошибок
     std::future<void> start() {
         running_ = true;
         error_promise_ = std::promise<void>();
         auto future = error_promise_.get_future();
-        
+
         worker_thread_ = std::thread(&Logger::processQueue, this);
         return future;
     }
@@ -50,7 +48,7 @@ public:
             running_ = false;
         }
         condition_.notify_one();
-        
+
         if (worker_thread_.joinable()) {
             worker_thread_.join();
         }
@@ -68,13 +66,11 @@ public:
         condition_.notify_one();
     }
 
-    void operator<< (const std::string& message) { log(message); }
+    void operator<<(const std::string& message) { log(message); }
 
-    bool hasError() const {
-        return error_occurred_;
-    }
+    bool hasError() const { return error_occurred_; }
 
-private:
+   private:
     std::queue<std::string> message_queue_;
     std::mutex mutex_;
     std::condition_variable condition_;
@@ -110,4 +106,4 @@ private:
     void processQueue();
 };
 
-#endif // LOGGER_H
+#endif  // LOGGER_H

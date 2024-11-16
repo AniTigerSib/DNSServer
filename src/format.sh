@@ -18,7 +18,7 @@ shift
 
 # Обрабатываем файлы
 for file in "$@"; do
-    if [[ "$file" == *.cc ]]; then
+    if [[ "$file" == *.cc ]] || [[ "$file" == *.h ]]; then
         echo "Formatting $file with clang-format..."
         clang-format --style="{BasedOnStyle: Google, IndentWidth: 4}" "$flag" "$file"
     else
