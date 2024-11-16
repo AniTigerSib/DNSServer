@@ -4,7 +4,7 @@
 #include <fstream>
 #include <iomanip>
 
-std::string Logger::formatMessage(const std::string& message) {
+std::string Logger::format_message(const std::string& message) {
     auto now = std::chrono::system_clock::now();
     auto time = std::chrono::system_clock::to_time_t(now);
     auto ms = std::chrono::duration_cast<std::chrono::milliseconds>(
@@ -18,7 +18,7 @@ std::string Logger::formatMessage(const std::string& message) {
     return ss.str();
 }
 
-void Logger::processQueue() {
+void Logger::process_queue() {
     std::ofstream log_file(filename_, std::ios::app);
     
     if (!log_file.is_open()) {

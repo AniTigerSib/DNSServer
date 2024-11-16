@@ -1,3 +1,4 @@
+#include <fstream>
 #include <iostream>
 #include <boost/asio.hpp>
 #include <thread>
@@ -8,6 +9,7 @@
 
 using boost::asio::ip::udp;
 
+// constexpr uint16_t DNS_PORT = 8080;
 constexpr uint16_t DNS_PORT = 53; // Стандартный DNS-порт
 constexpr size_t MAX_DNS_PACKET_SIZE = 512; // Максимальный размер DNS пакета
 
@@ -38,7 +40,7 @@ class DNSServer {
 public:
     DNSServer(boost::asio::io_context& io_context, const std::string& upstream_dns)
         : socket_(io_context, udp::endpoint(udp::v4(), DNS_PORT)),
-          upstream_dns_(upstream_dns), resolver_(io_context) {}
+          resolver_(io_context), upstream_dns_(upstream_dns) {}
 
     void start() { receive(); }
 

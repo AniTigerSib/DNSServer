@@ -36,7 +36,7 @@ public:
         error_promise_ = std::promise<void>();
         auto future = error_promise_.get_future();
 
-        worker_thread_ = std::thread(&Logger::processQueue, this);
+        worker_thread_ = std::thread(&Logger::process_queue, this);
         return future;
     }
 
@@ -60,7 +60,7 @@ public:
             if (error_occurred_) {
                 throw LoggerException("Logger is in error state");
             }
-            message_queue_.push(formatMessage(message));
+            message_queue_.push(format_message(message));
         }
         condition_.notify_one();
     }
@@ -82,8 +82,8 @@ private:
     std::promise<void> error_promise_;
 
     // Форматирование сообщения с добавлением временной метки
-    std::string formatMessage(const std::string& message);
+    std::string format_message(const std::string& message);
 
     // Основной цикл обработки очереди сообщений
-    void processQueue();
+    void process_queue();
 };
