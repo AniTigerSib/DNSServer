@@ -10,10 +10,14 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 
 # Добавляем путь к Boost
 find_package(Boost 1.83 REQUIRED COMPONENTS system)
+find_package(yaml-cpp REQUIRED)
 
 # Проверяем, найден ли Boost
 if (NOT Boost_FOUND)
     message(FATAL_ERROR "Boost not found!")
+endif()
+if (NOT yaml-cpp_FOUND)
+    message(FATAL_ERROR "yaml-cpp not found!")
 endif()
 
 set(SOURCES_DIR src/)
@@ -31,6 +35,7 @@ add_executable(${PROJECT_NAME} ${SOURCES})
 # Линкуем Boost
 target_include_directories(${PROJECT_NAME} PRIVATE ${Boost_INCLUDE_DIRS})
 target_link_libraries(${PROJECT_NAME} PRIVATE ${Boost_LIBRARIES})
+target_link_libraries(${PROJECT_NAME} PRIVATE yaml-cpp::yaml-cpp)
 
 # Вывод сообщений о состоянии сборки
 message(STATUS "Using Boost version: ${Boost_VERSION}")
