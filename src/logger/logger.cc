@@ -1,5 +1,9 @@
 #include "logger.h"
 
+#include <chrono>
+#include <fstream>
+#include <iomanip>
+
 std::string Logger::formatMessage(const std::string& message) {
     auto now = std::chrono::system_clock::now();
     auto time = std::chrono::system_clock::to_time_t(now);
@@ -16,29 +20,62 @@ std::string Logger::formatMessage(const std::string& message) {
 
 void Logger::processQueue() {
     std::ofstream log_file(filename_, std::ios::app);
-        
-    while (true) {
-        std::string message;
-        
+    
+    if (!log_file.is_open()) {
         {
-            std::unique_lock<std::mutex> lock(mutex_);
-            condition_.wait(lock, [this] {
-                return !message_queue_.empty() || !running_;
-            });
+            std::lock_guard<std::mutex> lock(mutex_);
+            error_occurred_ = true;
+        }
 
-            if (!running_ && message_queue_.empty()) {
-                break;
+        error_promise_.set_exception(
+            std::make_exception_ptr(
+                LoggerException("Failed to open log file: " + filename_)
+            )
+        );
+        return;
+    }
+
+    try {
+        error_promise_.set_value(); // Сигнализируем об успешном открытии файла
+
+        while (true) {
+            std::string message;
+
+            {
+                std::unique_lock<std::mutex> lock(mutex_);
+                condition_.wait(lock, [this] {
+                    return !message_queue_.empty() || !running_;
+                });
+
+                if (!running_ && message_queue_.empty()) {
+                    break;
+                }
+
+                if (!message_queue_.empty()) {
+                    message = std::move(message_queue_.front());
+                    message_queue_.pop();
+                }
             }
 
-            if (!message_queue_.empty()) {
-                message = std::move(message_queue_.front());
-                message_queue_.pop();
+            if (!message.empty()) {
+                log_file << message << std::endl;
+                if (!log_file) {
+                    throw LoggerException("Failed to write to log file");
+                }
+                log_file.flush();
             }
         }
-        
-        if (!message.empty()) {
-            log_file << message << std::endl;
-            log_file.flush();
+    }
+    catch (const std::exception& e) {
+        {
+            std::lock_guard<std::mutex> lock(mutex_);
+            error_occurred_ = true;
         }
+        // В случае если promise уже был использован (что означает, что файл был успешно открыт),
+        // исключение будет проигнорировано
+        try {
+            error_promise_.set_exception(std::current_exception());
+        }
+        catch (const std::future_error&) {}
     }
 }
