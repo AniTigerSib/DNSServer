@@ -1,7 +1,12 @@
 filebeat.inputs:
-  - type: log
-    enabled: true
+  - type: filestream
+    id: dns_logs_input # Уникальный идентификатор для этого ввода
     paths:
-      - /path/to/dns-logs/*.log
+      - /var/log/named_query.log  # Путь к логам DNS
+    parsers:
+      - multiline:
+          pattern: '^\d{2}-\w{3}-\d{4}'  # Регулярное выражение для начала новой строки
+          negate: true
+          match: after
 output.logstash:
   hosts: ["elk:5044"]  # Соединение с Logstash в контейнере ELK
