@@ -11,6 +11,15 @@ C++ realization of DNS emulator. Developed for SurSU Digital Challenge competiti
 - Boost library (asio for sockets)
 - yaml-cpp for configuration purposes
 
+## demonstration
+
+Логи визуализируются как таблица используя html/css/js <br>
+
+![image](https://github.com/user-attachments/assets/ba8be8bb-97c1-4adf-8305-cffbfb38ea24)
+![image copy](https://github.com/user-attachments/assets/89e13a94-9064-4c00-a709-e81b1f047229)
+![image copy 2](https://github.com/user-attachments/assets/ea4ecc72-5ae7-4008-bc18-2fef4a3a347a)
+![image copy 3](https://github.com/user-attachments/assets/279e9a20-ee2e-4c3a-94ff-f24953fe1c99)
+
 ## Install and Startup guide
 
 #### Install
