@@ -10,4 +10,16 @@ compile_commands.json
 CTestTestfile.cmake
 _deps
 CMakeUserPresets.json
+
+# Build directory
 build
+
+# Temporary files
+.cache
+temp_test*
+
+# Log files
+*.log
+
+# Specific files
+.clangd
